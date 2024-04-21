@@ -1,34 +1,3 @@
-# variables
-variable "bucket_name" {
-  description = "The name of the S3 bucket"
-  type        = string
-}
-
-variable "user_name" {
-  description = "The name of the IAM user"
-  type        = string
-}
-
-variable "default_region" {
-  description = "The name of the IAM user default region"
-  type        = string
-}
-
-variable "weather_api_key" {
-  description = "Api key"
-  type        = string
-}
-
-variable "cities_list" {
-  description = "List of tracked cities"
-  type        = string
-}
-
-variable "kafka_host" {
-  description = "Kafka host"
-  type        = string
-}
-
 # data "aws_iam_user" "s3_user" {
 #   user_name = var.user_name
 # }
@@ -41,7 +10,7 @@ resource "aws_s3_bucket" "kafka-bucket" {
     Name        = "kafka-bucket"
     Environment = "Dev"
   }
-  }
+}
 
 resource "aws_s3_bucket_policy" "bucket_policy" {
   bucket = aws_s3_bucket.kafka-bucket.id
@@ -119,12 +88,6 @@ resource "null_resource" "credentials_file" {
   depends_on = [aws_iam_access_key.s3_user_keys]
 }
 
-# variables
-variable "docker_pat" {
-  description = "docker pat"
-  type        = string
-}
-
 # update kestra flow
 resource "kestra_flow" "example" {
   namespace = "kafka-ots"
@@ -147,7 +110,7 @@ tasks:
           "auths": {
               "https://index.docker.io/v1/": {
                   "username": "caidam",
-                  "password": "${ var.docker_pat }"
+                  "password": "${var.docker_pat}"
               }
           }
         }
@@ -160,4 +123,28 @@ triggers:
   type: io.kestra.core.models.triggers.types.Schedule
   cron: "0 * * * *"
 EOT
+}
+
+
+
+# vault #########
+module "vault_secrets" {
+  source = "git::https://github.com/caidam/terraform_modules.git//vault_secrets"
+
+  mount_path = "kafka_project" # Name of the kv store
+
+  token_ttl = "768h" # The Time To Live period of the token, specified as a numeric string with suffix like '30s' or '5m'
+
+  # edit the data_json.tpl file and add the variables accordingly, you can create additional variables and use .tfvars to avoid hardcoding sensitive information
+  data_json = templatefile("${path.module}/templates/data_json.tpl", {
+    aws_access_key     = aws_iam_access_key.s3_user_keys.id
+    aws_secret_key     = aws_iam_access_key.s3_user_keys.secret,
+    s3_bucket_name     = var.bucket_name,
+    aws_default_region = var.default_region,
+    kafka_host         = var.kafka_host,
+    weather_api_key    = var.weather_api_key,
+    cities_list        = var.cities_list
+  })
+
+  depends_on = [null_resource.credentials_file]
 }

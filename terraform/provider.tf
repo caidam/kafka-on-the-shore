@@ -6,8 +6,8 @@ terraform {
     }
 
     kestra = {
-      source = "kestra-io/kestra"
-      version = "~> 0.7.0" 
+      source  = "kestra-io/kestra"
+      version = "~> 0.7.0"
     }
   }
 }
@@ -19,4 +19,9 @@ provider "aws" {
 provider "kestra" {
   # mandatory, the Kestra webserver/standalone URL
   url = "http://localhost:8080"
+}
+
+provider "vault" {
+  address = var.vault_address
+  token   = var.vault_token
 }
