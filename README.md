@@ -7,12 +7,12 @@ The premise? Mysterious events are occurring in multiple cities—like fish rain
 
 💭 *Are these events truly supernatural? Or just a trick of the weather?* 
 
-As a **data engineer**, the task is to build an architecture that would enable the capture, storage, and analisis of the data produced by the sensors, ultimately helping to uncover the *weather conditions* under which the events appear.  
+As a **data engineer**, the task is to build an architecture that would enable the capture, storage, and analysis of the data produced by the sensors, ultimately helping to uncover the *weather conditions* under which the events appear.  
 
 ### **Tech Stack**
 - **Kafka** - Real-time data streaming  
 - **Docker & Docker Compose** - Local setup  
-- **Terraform** - Infrastructure as Code (AWS provisioning)  
+- **Terraform** - Infrastructure as Code (resource provisioning)  
 - **Kestra** - Workflow orchestration  
 - **AWS S3** - Data storage  
 - **DuckDB / MotherDuck** - Cloud data warehouse for analysis  
