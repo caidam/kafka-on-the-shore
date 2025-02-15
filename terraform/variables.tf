@@ -40,13 +40,13 @@ variable "docker_pat" {
 }
 
 
-# vault #######
-variable "vault_address" {
-  description = "Address of the HCP Vault"
-  type        = string
-}
+# # vault #######
+# variable "vault_address" {
+#   description = "Address of the HCP Vault"
+#   type        = string
+# }
 
-variable "vault_token" {
-  description = "Token with relevant permissions to read, write, create, delete resources on the HCP Vault"
-  type        = string
-}
+# variable "vault_token" {
+#   description = "Token with relevant permissions to read, write, create, delete resources on the HCP Vault"
+#   type        = string
+# }

@@ -21,7 +21,8 @@ provider "kestra" {
   url = "http://localhost:8080"
 }
 
-provider "vault" {
-  address = var.vault_address
-  token   = var.vault_token
-}
+## vault
+# provider "vault" {
+#   address = var.vault_address
+#   token   = var.vault_token
+# }

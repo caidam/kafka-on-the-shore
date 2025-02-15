@@ -127,24 +127,24 @@ EOT
 
 
 
-# vault #########
-module "vault_secrets" {
-  source = "git::https://github.com/caidam/terraform_modules.git//vault_secrets"
+# # VAULT - UNCOMMENT BELOW (+ related variables and provider) TO WRITE SECRETS TO A VAULT INSTANCE #########
+# module "vault_secrets" {
+#   source = "git::https://github.com/caidam/terraform_modules.git//vault_secrets"
 
-  mount_path = "kafka_project" # Name of the kv store
+#   mount_path = "kafka_project" # Name of the kv store
 
-  token_ttl = "768h" # The Time To Live period of the token, specified as a numeric string with suffix like '30s' or '5m'
+#   token_ttl = "768h" # The Time To Live period of the token, specified as a numeric string with suffix like '30s' or '5m'
 
-  # edit the data_json.tpl file and add the variables accordingly, you can create additional variables and use .tfvars to avoid hardcoding sensitive information
-  data_json = templatefile("${path.module}/templates/data_json.tpl", {
-    aws_access_key     = aws_iam_access_key.s3_user_keys.id
-    aws_secret_key     = aws_iam_access_key.s3_user_keys.secret,
-    s3_bucket_name     = var.bucket_name,
-    aws_default_region = var.default_region,
-    kafka_host         = var.kafka_host,
-    weather_api_key    = var.weather_api_key,
-    cities_list        = var.cities_list
-  })
+#   # edit the data_json.tpl file and add the variables accordingly, you can create additional variables and use .tfvars to avoid hardcoding sensitive information
+#   data_json = templatefile("${path.module}/templates/data_json.tpl", {
+#     aws_access_key     = aws_iam_access_key.s3_user_keys.id
+#     aws_secret_key     = aws_iam_access_key.s3_user_keys.secret,
+#     s3_bucket_name     = var.bucket_name,
+#     aws_default_region = var.default_region,
+#     kafka_host         = var.kafka_host,
+#     weather_api_key    = var.weather_api_key,
+#     cities_list        = var.cities_list
+#   })
 
-  depends_on = [null_resource.credentials_file]
-}
+#   depends_on = [null_resource.credentials_file]
+# }
