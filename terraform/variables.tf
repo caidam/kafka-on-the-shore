@@ -35,8 +35,25 @@ variable "kafka_host" {
 
 # docker
 variable "docker_pat" {
-  description = "docker pat"
+  description = "docker private access token"
   type        = string
+}
+
+variable "dockerhub_username" {
+  description = "DockerHub username"
+  type        = string
+}
+
+variable "docker_image_name" {
+  description = "Docker image name"
+  type        = string
+  default     = "private"
+}
+
+variable "docker_image_tag" {
+  description = "Docker image tag"
+  type        = string
+  default     = "kots-consolidation"
 }
 
 

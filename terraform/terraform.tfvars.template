@@ -1,0 +1,13 @@
+bucket_name     = "kafka-on-the-shore-project-bucket-001" #note bucket name has to be globally unique
+user_name       = "kafka-ots-user" # name of the user that will be created by terraform and will have permission to use the bucket
+default_region  = "eu-north-1" # default aws region
+weather_api_key = "your-api-key" # openweather api key
+cities_list     = "Paris,Bangkok,Tokyo,Cape Town,Moscow,Dubai,Ushuaia,Wellington,Takamatsu" # list of the cities tracked in the project
+kafka_host      = "localhost:9093" # host of the kafka cluster
+docker_pat      = "" # Dockerhub private acces token
+dockerhub_username = "your-dockerhub-username"
+docker_image_name = "private"
+docker_image_tag = "kots-consolidation"
+# # vault #####
+# vault_address = "url of your vault instance"
+# vault_token   = "access token for your vault instance"

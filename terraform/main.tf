@@ -70,6 +70,23 @@ resource "aws_iam_user_policy_attachment" "s3_user_policy_attachment" {
   policy_arn = aws_iam_policy.s3_policy.arn
 }
 
+# Generate Makefile for consolidation image push
+data "template_file" "makefile" {
+  template = file("${path.module}/templates/Makefile.tpl")
+
+  vars = {
+    DOCKERHUB_USERNAME = var.dockerhub_username
+    IMAGE_NAME         = var.docker_image_name
+    IMAGE_TAG          = var.docker_image_tag
+  }
+}
+
+# Write the generated Makefile to a file in the parent directory
+resource "local_file" "makefile" {
+  content  = data.template_file.makefile.rendered
+  filename = "${path.module}/../consolidation/Makefile"
+}
+
 # save credentials
 resource "null_resource" "credentials_file" {
   provisioner "local-exec" {
@@ -104,12 +121,12 @@ tasks:
 #      enabled: true
     runner: DOCKER
     docker:
-      image: caidam/private:kots-consolidation
+      image: ${var.dockerhub_username}/${var.docker_image_name}:${var.docker_image_tag}
       config: |
         {
           "auths": {
               "https://index.docker.io/v1/": {
-                  "username": "caidam",
+                  "username": "${var.dockerhub_username}",
                   "password": "${var.docker_pat}"
               }
           }
@@ -118,10 +135,10 @@ tasks:
       - python /app/consolidate_files.py
 
 triggers:
-  # Here we use the 'Schedule' trigger to run the flow every hour on the dot.
-- id: every1Hour
+  # Here we use the 'Schedule' trigger to run the flow every 15 minutes on the dot.
+- id: every15Mn
   type: io.kestra.core.models.triggers.types.Schedule
-  cron: "0 * * * *"
+  cron: "*/15 * * * *"
 EOT
 }
 

@@ -1,13 +1,13 @@
 ## **Kafka on the Shore - A Surreal Data Engineering Investigation**
 
 ### **Overview**
-This project is inspired by the novel [*Kafka on the Shore*](https://en.wikipedia.org/wiki/Kafka_on_the_Shore) and serves as both a technical demonstration of real-time streaming with Apache Kafka and an investigative data exploration challenge.  
+This project is inspired by the novel [*Kafka on the Shore*](https://en.wikipedia.org/wiki/Kafka_on_the_Shore) and serves as both a technical experimentation of real-time streaming with Apache Kafka and an investigative data exploration challenge.  
 
 The premise? Mysterious events are occurring in multiple cities—like fish raining from the sky or a shadowless man walking the streets. To investigate, sensors have been placed in these locations, triggering at random intervals to gather weather data and detect surreal phenomena. 
 
 💭 *Are these events truly supernatural? Or just a trick of the weather?* 
 
-As a **data engineer**, the task is to build an architecture that would enable the capture, storage, and analysis of the data produced by the sensors, ultimately helping to uncover the *weather conditions* under which the events appear.  
+As a **data engineer**, my task is to build an architecture that would enable the capture, storage, and analysis of the data produced by the sensors, ultimately helping to uncover the *weather conditions* under which the events appear.  
 
 ### **Tech Stack**
 - **Kafka** - Real-time data streaming  
@@ -15,14 +15,14 @@ As a **data engineer**, the task is to build an architecture that would enable t
 - **Terraform** - Infrastructure as Code (resource provisioning)  
 - **Kestra** - Workflow orchestration  
 - **AWS S3** - Data storage  
-- **DuckDB / MotherDuck** - Cloud data warehouse for analysis  
+- **DuckDB / MotherDuck** - Cloud data Lakehouse for analysis  
 - **Python** - Data processing & consumers  
 
 ---
 
 ### **Project Architecture**
 
-<img src="./misc/kots-architecture.png" alt="Description" width=800 >
+<img src="./misc/kots-architecture.png" alt="Architecture of the project" width=800 >
 
 🚀 The pipeline consists of several key components:  
 
@@ -59,7 +59,7 @@ As a **data engineer**, the task is to build an architecture that would enable t
 
 ### **Investigative Challenge**  
 
-📌 Now that we have all the infrastructure in place, this project can also serve as an **investigative challenge** for aspiring data analysts. While the logic behind event occurrences is embedded in the code, the task is to **uncover the hidden patterns using SQL and data exploration alone**.  
+📌 Now that we have all the infrastructure in place, this project can also serve as an **investigative challenge** for aspiring data professionals. While the logic behind event occurrences is embedded in the code, the task is to **uncover the hidden patterns using SQL and data exploration alone**.  
 
 🔍 **How to approach the challenge:**  
 1. **Run the project as is**—this will process and gather weather data, storing it in **S3** for further analysis.  
@@ -76,7 +76,145 @@ This challenge encourages to think like a **data detective**, relying on real-wo
 
 ### **How to Run the Project**
 
--- coming soon --
+#### **1. Prerequisites**  
+
+Ensure you have the following installed and configured:  
+
+- **Docker** – Installed and running  
+- **Docker Hub Account** – Logged in + dedicated [private access token](https://docs.docker.com/security/for-developers/access-tokens/) for the project
+- **AWS CLI** – Installed and authenticated (`aws configure`)  
+- **Terraform** – Installed  
+- [**OpenWeather API Key**](https://openweathermap.org/appid) – Required for fetching weather data  
+- [**UV**](https://docs.astral.sh/uv/getting-started/installation/) – Installed (Python package manager)
+- [**MotherDuck**](https://motherduck.com/) – Account created and available
+
+---
+
+#### **2. Environment Setup**  
+
+##### **Docker Login**  
+Ensure you are logged into Docker Hub from your terminal:  
+```bash
+docker login
+```  
+
+##### **AWS CLI Configuration**  
+Check if AWS CLI is installed and authenticated:  
+```bash
+aws --version
+aws configure
+aws iam get-user
+```  
+
+##### **Terraform Installation Check**  
+Verify Terraform is installed:  
+```bash
+terraform -version
+```  
+
+##### **Install Dependencies Using uv**  
+Instead of `pip`, this project uses `uv`:  
+```bash
+git clone https://github.com/caidam/kafka-on-the-shore.git
+
+cd kafka-on-the-shore
+
+uv sync
+```  
+
+---
+
+#### **3. Running the Project**  
+
+##### **Start Kestra Containers**  
+Before provisioning infrastructure, run Kestra:  
+```bash
+# from the root of the project
+cd kestra
+docker-compose up -d
+```  
+
+##### **Set Up Terraform**  
+1. Use `terraform.tfvars.template` to create a `terraform.tfvars` file with your configuration.
+
+   > 
+   >>Kestra needs a docker image to run the consolidation script on a schedule. The Terraform consolidation includes a step to build and push this image to your DockerHub repository and relies on the information you input in the `.tfvars` file.
+   >
+   >> Note that the image will not be deleted when running `terraform destroy`, you will have to do it manually if needed.
+
+2. Initialize and deploy infrastructure:  
+   ```bash
+   # from the root of the project
+   cd terraform
+   terraform fmt
+   terraform init
+   terraform plan
+   terraform apply
+   ```
+
+   You can check all resources have been created and go to your AWS interface to check newly created S3 bucket. You will be able to see new folders and files being created in it when you run the scripts later on in the process.
+
+3. To clean up (when you're finished with the project):  
+   ```bash
+   terraform destroy
+   ```  
+   > You will have to manually destroy the content of the S3 Bucket beforehand
+
+   > Also make sure to stop and clean up the containers using `docker compose down` where relevant.
+
+##### **Run the Kafka Cluster and Scripts**  
+Once the infrastructure is up, start the Kafka components:
+
+1. Run the cluster:
+```bash
+# from the root of the project
+cd kafka
+docker-compose up -d
+```
+
+2. Run the python scripts:
+
+> You can install and use [tmux](https://doc.ubuntu-fr.org/tmux) to see the different components run at the same time and monitor the data flow. Or simply use several terminal windows and sessions to launch each script.
+
+```bash
+# each script needs to run continuously alongside the others
+uv run event_consumer.py
+
+uv run weather_consumers.py
+
+uv run weather_producer.py
+```
+
+Once the three scripts are running in parallel data will continuously be uploaded to S3, you can let the scripts run as long as wish but make sure to stop them when you are done to avoid incurring unintended costs on AWS.
+
+<img src="./misc/parallel-kafka-tmux.png" alt="Scripts running in parallel with tmux" width=800 >
+
+##### **Consolidation**
+
+The consolidation jobs are handled by Kestra and are set to run once every 15 minutes. If you do not want to wait for the consolidated files to be generated you can run the job or `flow` manually via Kestra's UI:
+- By default the UI is available at `localhost:8080` (provided the container is running)
+- Via the ui go to `Flows`
+- locate and click on the one named `kafka-ots-consolidation`
+- Click on `Execute` and confirm by clicking on `Execute`
+<img src="./misc/kestra-execute.png" alt="Screenshot of Kestra's UI" width=800 >
+- Wait for the flow to finish and check your consolidated files have been created in your AWS S3 bucket
+
+#### **4. Next Steps**  
+
+Once the pipeline is running, data will be stored in S3. You can now:  
+📌 Analyze surreal event occurrences in **MotherDuck/DuckDB**.  
+📌 Investigate **why** events are happening using SQL queries.  
+
+On the Motherduck Interface:
+
+- Click on your profile/organization and go to `Secrets`
+- Add an `Amazon S3` secret using the custom credentials in the `.env` file generated by Terraform
+- You can now query your consolidated files like so:
+```sql
+SELECT * FROM 's3://<your-bucket-name>/consolidated_cities/Paris.csv'
+```
+- The floor is yours !
+<img src="./misc/motherduck-query-s3.png" alt="Screenshot of Motherduck's interface" width=800 >
 
 ---
 
